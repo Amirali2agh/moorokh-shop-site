@@ -1,0 +1,2 @@
+# Binux Shop Demo
+Persian RTL public-facing clothing storefront for demonstrating a familiar Digikala-style purchase journey. Official Binux logo, distinct palette and original copy. All merchandise, prices and orders are sample data. No accounts, payment gateway, personal data or backend. Visitors can browse and complete a simulated order. Ship in a standalone folder without creating a remote repository.

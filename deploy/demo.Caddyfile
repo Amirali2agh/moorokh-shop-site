@@ -1,0 +1,24 @@
+# Public static Binux storefront demo; no backend, writes, user data or payments.
+binux-shop-demo.speed-service.shop {
+    tls {
+        issuer acme https://acme.zerossl.com/v2/DV90
+    }
+    root * /config/binux-shop-demo
+    header {
+        X-Robots-Tag "noindex, nofollow"
+        X-Content-Type-Options nosniff
+        Referrer-Policy no-referrer
+        Content-Security-Policy "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'"
+        Cache-Control "no-cache"
+    }
+    @static {
+        method GET HEAD
+        path / /index.html /shop.js /shop.css /brand.css /assets/*
+    }
+    handle @static {
+        file_server
+    }
+    handle {
+        respond 404
+    }
+}

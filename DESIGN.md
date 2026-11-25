@@ -1,0 +1,2 @@
+# Design
+The design uses a deep navy announcement band and white two-level RTL header, a lavender campaign stage, photographic category shortcuts, a high-contrast specials shelf, and a quiet product grid. CSS tokens are in `public/shop.css`. The central flow is product discovery → size selection → persistent cart → simulated confirmation. Keep the demo banner and inline checkout disclaimer in any theme.

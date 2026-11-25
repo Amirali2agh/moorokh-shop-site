@@ -1,0 +1,53 @@
+'use strict';
+const $=(s,el=document)=>el.querySelector(s), $$=(s,el=document)=>Array.from(el.querySelectorAll(s));
+const icon=n=>`<svg aria-hidden="true"><use href="#${n}"/></svg>`;
+const nf=new Intl.NumberFormat('fa-IR'), num=n=>nf.format(n), money=n=>`${num(n)} تومان`;
+const cats={all:'همه محصولات',tee:'تی‌شرت',jeans:'شلوار جین',shoe:'کفش و کتانی',bag:'کیف و کوله',hoodie:'هودی و سویشرت',jacket:'کت و کاپشن',cap:'کلاه'};
+const entries=[['tee','تی‌شرت نخی مینیمال',389000,490000,'پارچه نخی، یقه گرد و فرم آزاد برای استفاده روزمره.','S,M,L,XL'],['jeans','شلوار جین راسته آبی',879000,1090000,'جین آبی با برش راسته و جیب‌های کاربردی.','۳۰,۳۲,۳۴,۳۶'],['shoe','کتانی اسپرت قرمز',1290000,1590000,'کتانی بنددار با رویه پارچه‌ای و زیره سبک.','۳۹,۴۰,۴۱,۴۲,۴۳'],['bag','کوله‌پشتی شهری',729000,920000,'کوله پارچه‌ای با بند قابل تنظیم و جیب جلو.','تک‌سایز'],['hoodie','هودی کلاه‌دار روزمره',769000,0,'هودی نرم با کلاه بنددار برای روزهای خنک.','S,M,L,XL'],['jacket','کت جین روزمره',1390000,0,'کت جین دکمه‌ای، مناسب پوشیدن روی تی‌شرت.','S,M,L,XL'],['cap','کلاه کپ بنددار',299000,0,'کلاه نقاب‌دار با بند قابل تنظیم در پشت.','تک‌سایز']];
+const products=entries.map(([id,name,price,old,desc,sizes])=>({id,name,price,old,desc,sizes:sizes.split(',')}));
+const byId=id=>products.find(p=>p.id===id), image=(id,alt='',attr='')=>`<img src="assets/${id}.jpg" alt="${alt}" ${attr}>`;
+const load=(key,fallback)=>{try{return JSON.parse(localStorage.getItem('binux-demo:'+key))??fallback}catch{return fallback}};
+const savedCart=load('cart',[]), savedFav=load('fav',[]);
+let cart=Array.isArray(savedCart)?savedCart.filter(l=>l&&byId(l.id)?.sizes.includes(l.size)&&Number.isInteger(l.qty)&&l.qty>0&&l.qty<=20):[];
+let fav=new Set(Array.isArray(savedFav)?savedFav.filter(byId):[]), cat='all', q='', sort='default', mode='', slide=0, toastTimer;
+const panel=$('#panel'), body=$('#panel-body');
+function save(){try{localStorage.setItem('binux-demo:cart',JSON.stringify(cart));localStorage.setItem('binux-demo:fav',JSON.stringify([...fav]));}catch{} $('#count').textContent=num(cart.reduce((n,l)=>n+l.qty,0));}
+function notify(text){const t=$('#toast');t.textContent=text;clearTimeout(toastTimer);toastTimer=setTimeout(()=>{t.textContent=''},2500)}
+const categoryButtons=(kind)=>Object.entries(cats).filter(([id])=>kind!=='photo'||(id!=='all'&&id!=='cap')).map(([id,label])=>kind==='photo'?`<button class="cat-item" data-cat="${id}">${image(id)}<span>${label}</span></button>`:`<button ${kind==='chip'?'class="chip"':''} data-cat="${id}">${id==='all'?'همه':label}</button>`).join('');
+$('#categories').innerHTML=categoryButtons('photo'); $('#filters').innerHTML=categoryButtons('chip'); $('#menu-items').innerHTML=categoryButtons('menu');
+const normalize=s=>s.replace(/[يى]/g,'ی').replace(/ك/g,'ک').replace(/[\s\u200c\u200d-]+/g,'').toLowerCase();
+const markup=p=>`<article class="product"><button class="product-main" data-act="product" data-id="${p.id}">${image(p.id,'','loading="lazy"')}<h3>${p.name}</h3></button><button class="favorite icon" aria-label="علاقه‌مندی: ${p.name}" aria-pressed="${fav.has(p.id)}" data-act="fav" data-id="${p.id}">${icon('heart')}</button><div class="prices">${p.old?`<span class="discount">${num(Math.round((1-p.price/p.old)*100))}٪</span>`:''}<div><strong class="price">${money(p.price)}</strong>${p.old?`<s>${money(p.old)}</s>`:''}</div></div></article>`;
+function offers(){$('#offer-grid').innerHTML=products.filter(p=>p.old).map(markup).join('')}
+function render(){
+ let result=products.filter(p=>(cat==='all'||cat===p.id)&&(!q||normalize(p.name+' '+cats[p.id]+' '+p.desc).includes(normalize(q))));
+ if(sort==='cheap')result.sort((a,b)=>a.price-b.price); if(sort==='high')result.sort((a,b)=>b.price-a.price); if(sort==='new')result.reverse(); if(sort==='deals')result=result.filter(p=>p.old);
+ $('#results').textContent=`${num(result.length)} کالا`;$('#catalog-title').textContent=q?'نتیجه جستجو':cat!=='all'?cats[cat]:sort==='new'?'تازه‌رسیده‌ها':sort==='deals'?'محصولات تخفیف‌دار':'همه محصولات';
+ $('#products').innerHTML=result.length?result.map(markup).join(''):`<div class="empty"><b>محصولی پیدا نشد</b><p>عبارت دیگری جستجو کنید یا فیلترها را بردارید.</p><button class="primary" data-cat="all">نمایش همه محصولات</button></div>`;
+ $$('.cat-item,.chip').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.cat===cat)));
+}
+function choose(id,s='default'){cat=id;sort=s;q='';$('#query').value='';$('#sort').value=s;$('.nav details').open=false;render();$('#catalog').scrollIntoView({block:'start'});}
+const slides=[['پوشاک روزمره','از تی‌شرت و جین تا کتانی و کیف؛ ویترین پوشاک بینوکس را بگردید.','hero','all'],['کتانی اسپرت','مدل اسپرت قرمز را در ویترین کفش و کتانی ببینید.','shoe','shoe'],['کیف و کوله شهری','کوله‌پشتی روزمره را از نزدیک ببینید.','bag','bag']];
+$('#dots').innerHTML=slides.map((_,i)=>`<button data-act="slide" data-index="${i}" aria-label="اسلاید ${num(i+1)}" aria-pressed="${i===0}"></button>`).join('');
+function showSlide(i){slide=i;const [title,desc,src,category]=slides[slide];$('#hero-title').textContent=title;$('#hero-desc').textContent=desc;$('#hero-link').dataset.cat=category;const img=$('#hero-image');img.src=`assets/${src}.jpg`;img.alt=title;img.classList.remove('slide');void img.offsetWidth;img.classList.add('slide');$$('#dots button').forEach((b,k)=>b.setAttribute('aria-pressed',String(k===i)));}
+function open(view,title,content){mode=view;$('#panel-title').textContent=title;body.innerHTML=content;if(!panel.open)panel.showModal();}
+function detail(id){const p=byId(id);if(!p)return;open('product',p.name,`<div class="detail">${image(p.id,p.name)}<form id="add-form" data-id="${p.id}"><strong class="price">${money(p.price)}</strong><p>${p.desc}</p><label>سایز <select name="size" required>${p.sizes.length>1?'<option value="">انتخاب سایز</option>':''}${p.sizes.map(s=>`<option>${s}</option>`).join('')}</select></label><button class="primary" type="submit">${icon('plus')} افزودن به سبد خرید</button></form></div><p class="notice">این کالا و قیمت آن صرفاً برای نمایش هستند.</p>`);}
+function total(){return cart.reduce((n,l)=>n+byId(l.id).price*l.qty,0)}
+function showCart(){open('cart','سبد خرید',cart.length?cart.map((l,i)=>{const p=byId(l.id);return `<div class="line-item">${image(p.id)}<div><b>${p.name}</b><br><small>سایز: ${l.size} · ${money(p.price*l.qty)}</small><div class="qty"><button data-act="inc" data-index="${i}" aria-label="افزایش تعداد ${p.name}" ${l.qty>=20?'disabled':''}>+</button><output>${num(l.qty)}</output><button data-act="dec" data-index="${i}" aria-label="کاهش تعداد ${p.name}">−</button><button data-act="remove" data-index="${i}">حذف</button></div></div></div>`}).join('')+`<div class="total"><strong>جمع سبد</strong><strong class="price">${money(total())}</strong></div><button class="primary" data-act="checkout">ادامه خرید آزمایشی ${icon('arrow')}</button>`:`<div class="empty"><b>سبد خرید خالی است</b><p>یک کالا از ویترین انتخاب کنید.</p><button class="primary" data-act="close">بازگشت به فروشگاه</button></div>`);}
+function favorites(){const ps=products.filter(p=>fav.has(p.id));open('favorites','علاقه‌مندی‌ها',ps.length?ps.map(p=>`<div class="line-item">${image(p.id)}<div><button data-act="product" data-id="${p.id}"><b>${p.name}</b></button><br><small>${money(p.price)}</small><br><button class="chip" data-act="fav" data-id="${p.id}">حذف از علاقه‌مندی‌ها</button></div></div>`).join(''):`<div class="empty">هنوز محصولی به علاقه‌مندی‌ها اضافه نکرده‌اید.</div>`);}
+$('#query').addEventListener('input',e=>{q=e.target.value.trim();cat='all';sort='default';$('#sort').value=sort;render()});
+$('#search-form').addEventListener('submit',e=>{e.preventDefault();$('#catalog').scrollIntoView()});
+$('#sort').addEventListener('change',e=>{sort=e.target.value;render()});
+document.addEventListener('submit',e=>{if(e.target.id!=='add-form')return;e.preventDefault();const id=e.target.dataset.id,size=new FormData(e.target).get('size'),p=byId(id);if(!p?.sizes.includes(size))return;const l=cart.find(v=>v.id===id&&v.size===size);if(l&&l.qty>=20){open('added','سقف تعداد کالا',`<p>حداکثر ۲۰ عدد از هر سایز در سبد دمو قابل انتخاب است.</p><br><button class="primary" data-act="cart">مشاهده سبد خرید</button>`);return;}if(l)l.qty++;else cart.push({id,size,qty:1});save();open('added','به سبد خرید اضافه شد',`<p>${p.name} · سایز ${size}</p><br><div class="row-actions"><button class="primary" data-act="cart">مشاهده سبد خرید</button><button class="control" data-act="close">ادامه بازدید</button></div>`);});
+document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const {cat:c,sort:s,act,id,index}=b.dataset;if(c){choose(c,s);return}switch(act){
+ case 'slide':showSlide(Number(index));break;
+ case 'product':detail(id);break;
+ case 'close':panel.close();break;
+ case 'cart':showCart();break;
+ case 'favorites':favorites();break;
+ case 'fav':{const on=!fav.has(id);on?fav.add(id):fav.delete(id);save();$$(`.favorite[data-id="${id}"]`).forEach(el=>el.setAttribute('aria-pressed',String(on)));if(mode==='favorites'&&panel.open){favorites();body.querySelector('button')?.focus()}else notify(on?'به علاقه‌مندی‌ها اضافه شد':'از علاقه‌مندی‌ها حذف شد');break;}
+ case 'inc':case 'dec':case 'remove':{const l=cart[Number(index)];if(!l)break;if(act==='remove')l.qty=0;else l.qty=Math.min(20,l.qty+(act==='inc'?1:-1));cart=cart.filter(v=>v.qty>0);save();showCart();(body.querySelector(`button[data-act="${act}"][data-index="${index}"]:not(:disabled)`)||body.querySelector('button:not(:disabled)'))?.focus();break;}
+ case 'checkout':if(cart.length)open('checkout','مرور سفارش آزمایشی',`<p class="notice">بدون درگاه پرداخت. برای این سفارش شماره تماس، آدرس یا اطلاعات بانکی لازم نیست.</p><p>${num(cart.reduce((n,l)=>n+l.qty,0))} کالا · جمع نمایشی: <b>${money(total())}</b></p><br><div class="row-actions"><button class="primary" data-act="place">ثبت سفارش آزمایشی</button><button class="control" data-act="cart">بازگشت به سبد</button></div>`);break;
+ case 'place':if(cart.length){cart=[];save();open('done','سفارش آزمایشی ثبت شد',`<p class="notice">${icon('check')} فرایند آزمایشی به پایان رسید. پولی دریافت نشد و کالایی ارسال نمی‌شود.</p><button class="primary" data-act="close">بازگشت به فروشگاه</button>`);}break;
+ case 'help':open('help','راهنمای خرید دمو','<details open><summary>چطور خرید را امتحان کنم؟</summary>یک کالا انتخاب کنید، سایز را مشخص کنید و از سبد وارد ثبت سفارش آزمایشی شوید.</details><details><summary>آیا این سفارش واقعی است؟</summary>نه؛ قیمت‌ها و کالاها نمونه‌اند. پرداخت و ارسال واقعی وجود ندارد.</details><details><summary>سبد کجا نگهداری می‌شود؟</summary>فقط در مرورگر شما. اطلاعات شخصی دریافت نمی‌شود.</details>');break;
+}});
+save();offers();render();

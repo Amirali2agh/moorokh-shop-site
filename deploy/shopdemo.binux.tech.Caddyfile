@@ -1,0 +1,21 @@
+# Binux storefront demo: static files only, no payment or backend.
+shopdemo.binux.tech {
+    root * /opt/parallax/www/binux-shop-demo
+    header {
+        X-Robots-Tag "noindex, nofollow"
+        X-Content-Type-Options nosniff
+        Referrer-Policy no-referrer
+        Content-Security-Policy "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'"
+        Cache-Control "no-cache"
+    }
+    @static {
+        method GET HEAD
+        path / /index.html /shop.js /shop.css /brand.css /assets/*
+    }
+    handle @static {
+        file_server
+    }
+    handle {
+        respond 404
+    }
+}
