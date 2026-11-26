@@ -7,7 +7,7 @@ review = Path('.impeccable/review')
 review.mkdir(parents=True, exist_ok=True)
 with sync_playwright() as p:
     browser = p.chromium.launch(executable_path='/usr/bin/google-chrome', args=['--no-sandbox'])
-    for name, width, height in [('desktop', 1440, 960), ('mobile', 390, 844)]:
+    for name, width, height in [('desktop', 1440, 960), ('mobile', 390, 844), ('narrow-mobile', 320, 720)]:
         page = browser.new_page(viewport={'width': width, 'height': height}, reduced_motion='reduce')
         errors, failures, writes = [], [], []
         page.on('pageerror', lambda error: errors.append(str(error)))
@@ -73,6 +73,12 @@ with sync_playwright() as p:
         expect(page.locator('#panel .cart-item')).to_have_count(2)
         expect(page.locator('#panel .cart-heading b')).to_have_text('۲ محصول')
         expect(page.locator('#panel .cart-heading span')).to_have_text('۳ کالا در سبد')
+        expect(page.locator('#panel .cart-summary .summary-row').nth(0)).to_contain_text('۲ محصول')
+        expect(page.locator('#panel .cart-summary .summary-row').nth(1)).to_contain_text('۳ عدد')
+        expect(page.locator('#panel .cart-summary .continue-shopping')).to_be_visible()
+        assert page.evaluate('document.documentElement.scrollWidth === innerWidth')
+        cart_bounds = page.locator('#panel').bounding_box()
+        assert cart_bounds and cart_bounds['x'] >= 0 and cart_bounds['x'] + cart_bounds['width'] <= width
         page.locator('#panel .cart-item').first.locator('[data-act=inc]').click()
         expect(page.locator('#count')).to_have_text('۴')
         page.locator('#panel .cart-item').first.locator('[data-act=dec]').click()
@@ -90,7 +96,9 @@ with sync_playwright() as p:
         expect(page.locator('#panel-title')).to_have_text('سبد خرید')
         expect(page.locator('#count')).to_have_text('۰')
         expect(page.locator('#panel')).to_contain_text('سبد خرید خالی است')
+        page.locator('#panel-body [data-act=continue]').click()
+        expect(page.locator('#panel')).not_to_be_visible()
         assert not (errors or failures or writes), (errors, failures, writes)
-        print(name, 'passed: 14-product catalog, product images, RTL width, categories, search, favorites, add from card/detail, quantity controls, persistent cart, removal and clear confirmation')
+        print(name, 'passed: 14-product catalog, images, RTL width, categories, search, favorites, add from card/detail, quantity controls, persistence, summary counts, removal, clear confirmation and empty-state return')
         page.close()
     browser.close()
