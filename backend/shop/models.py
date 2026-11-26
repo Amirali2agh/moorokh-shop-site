@@ -68,6 +68,34 @@ class ProductVariant(models.Model):
         return f"{self.product.name} — {self.sku}"
 
 
+class Cart(models.Model):
+    session = models.OneToOneField(
+        "sessions.Session",
+        on_delete=models.CASCADE,
+        primary_key=True,
+        related_name="shop_cart",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+
+class CartItem(models.Model):
+    cart = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name="items")
+    variant = models.ForeignKey(ProductVariant, on_delete=models.PROTECT, related_name="cart_items")
+    quantity = models.PositiveBigIntegerField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ("variant_id",)
+        constraints = [
+            models.UniqueConstraint(fields=("cart", "variant"), name="shop_cart_item_unique_variant"),
+            models.CheckConstraint(condition=Q(quantity__gt=0), name="shop_cart_item_positive_quantity"),
+        ]
+
+    def __str__(self):
+        return f"{self.variant.sku} × {self.quantity}"
+
+
 class AppendOnlyModel(models.Model):
     append_only_message = "Records are append-only."
 
