@@ -51,22 +51,22 @@ TEMPLATES = [
 ]
 WSGI_APPLICATION = "config.wsgi.application"
 
-DB_HOST = os.getenv("DB_HOST", "").strip()
-if DB_HOST:
-    required_database_settings = ("DB_NAME", "DB_USER", "DB_PASSWORD")
-    missing_database_settings = [name for name in required_database_settings if not os.getenv(name)]
-    if missing_database_settings:
+POSTGRES_DB_HOST = os.getenv("POSTGRES_DB_HOST", "").strip()
+if POSTGRES_DB_HOST:
+    required_postgres_settings = ("POSTGRES_DB_NAME", "POSTGRES_DB_USER", "POSTGRES_DB_PASSWORD")
+    missing_postgres_settings = [name for name in required_postgres_settings if not os.getenv(name)]
+    if missing_postgres_settings:
         raise ImproperlyConfigured(
-            "Set DB_NAME, DB_USER, and DB_PASSWORD when DB_HOST is configured"
+            "Set POSTGRES_DB_NAME, POSTGRES_DB_USER, and POSTGRES_DB_PASSWORD when POSTGRES_DB_HOST is configured"
         )
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.postgresql",
-            "NAME": os.environ["DB_NAME"],
-            "USER": os.environ["DB_USER"],
-            "PASSWORD": os.environ["DB_PASSWORD"],
-            "HOST": os.environ["DB_HOST"],
-            "PORT": os.getenv("DB_PORT", "5432"),
+            "NAME": os.environ["POSTGRES_DB_NAME"],
+            "USER": os.environ["POSTGRES_DB_USER"],
+            "PASSWORD": os.environ["POSTGRES_DB_PASSWORD"],
+            "HOST": os.environ["POSTGRES_DB_HOST"],
+            "PORT": os.getenv("POSTGRES_DB_PORT", "5432"),
             "CONN_MAX_AGE": 60,
         }
     }
@@ -78,7 +78,7 @@ elif DEBUG:
         }
     }
 else:
-    raise ImproperlyConfigured("Set DB_HOST, DB_NAME, DB_USER, and DB_PASSWORD for PostgreSQL")
+    raise ImproperlyConfigured("Set POSTGRES_DB_HOST, POSTGRES_DB_NAME, POSTGRES_DB_USER, and POSTGRES_DB_PASSWORD for PostgreSQL")
 
 LANGUAGE_CODE = "en-us"
 TIME_ZONE = "UTC"

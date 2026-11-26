@@ -23,11 +23,11 @@ jobs:
       DJANGO_SECRET_KEY: "ci-only-not-a-production-secret"
       DJANGO_ALLOWED_HOSTS: "testserver,localhost,127.0.0.1"
       DJANGO_SECURE_SSL_REDIRECT: "0"
-      DB_NAME: shop_test
-      DB_USER: shop_test
-      DB_PASSWORD: ci-only-password
-      DB_HOST: 127.0.0.1
-      DB_PORT: "5432"
+      POSTGRES_DB_NAME: shop_test
+      POSTGRES_DB_USER: shop_test
+      POSTGRES_DB_PASSWORD: ci-only-password
+      POSTGRES_DB_HOST: 127.0.0.1
+      POSTGRES_DB_PORT: "5432"
     services:
       postgres:
         image: postgres:18.7

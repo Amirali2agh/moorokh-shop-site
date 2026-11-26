@@ -68,7 +68,24 @@ class ProductVariant(models.Model):
         return f"{self.product.name} — {self.sku}"
 
 
-class CatalogAudit(models.Model):
+class AppendOnlyModel(models.Model):
+    append_only_message = "Records are append-only."
+
+    class Meta:
+        abstract = True
+
+    def save(self, *args, **kwargs):
+        if not self._state.adding:
+            raise ValidationError(self.append_only_message)
+        return super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        raise ValidationError(self.append_only_message)
+
+
+class CatalogAudit(AppendOnlyModel):
+    append_only_message = "Catalog audit records are append-only."
+
     class ObjectType(models.TextChoices):
         PRODUCT = "product", "Product"
         VARIANT = "variant", "Variant"
@@ -88,19 +105,13 @@ class CatalogAudit(models.Model):
     class Meta:
         ordering = ("-created_at", "-pk")
 
-    def save(self, *args, **kwargs):
-        if not self._state.adding:
-            raise ValidationError("Catalog audit records are append-only.")
-        return super().save(*args, **kwargs)
-
-    def delete(self, *args, **kwargs):
-        raise ValidationError("Catalog audit records are append-only.")
-
     def __str__(self):
         return f"{self.object_type} {self.object_id}: {self.action}"
 
 
-class StockAdjustment(models.Model):
+class StockAdjustment(AppendOnlyModel):
+    append_only_message = "Stock adjustment records are append-only."
+
     variant = models.ForeignKey(ProductVariant, on_delete=models.PROTECT, related_name="stock_adjustments")
     delta = models.BigIntegerField()
     resulting_quantity = models.PositiveBigIntegerField()
@@ -113,14 +124,6 @@ class StockAdjustment(models.Model):
         constraints = [
             models.CheckConstraint(condition=~Q(delta=0), name="shop_stock_adjustment_nonzero_delta"),
         ]
-
-    def save(self, *args, **kwargs):
-        if not self._state.adding:
-            raise ValidationError("Stock adjustment records are append-only.")
-        return super().save(*args, **kwargs)
-
-    def delete(self, *args, **kwargs):
-        raise ValidationError("Stock adjustment records are append-only.")
 
     def __str__(self):
         return f"{self.variant.sku}: {self.delta:+d} → {self.resulting_quantity}"

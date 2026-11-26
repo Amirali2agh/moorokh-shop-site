@@ -2,7 +2,7 @@
 
 Persian RTL storefront source. The existing `public/` page is still a demo and is not connected to checkout or payments. This PR adds a backend foundation only; public-page integration is deferred until PR #5 is merged, as required by issue #7.
 
-Current demo product identities, claims, and pricing are not owner-approved; see `PRODUCT.md`. Do not copy them into the backend catalog.
+Demo-product approval and provenance are documented in [`PRODUCT.md`](PRODUCT.md). Do not copy demo listings into the backend catalog.
 
 ## Backend foundation
 
@@ -34,7 +34,7 @@ python manage.py createsuperuser
 python manage.py runserver 127.0.0.1:8000
 ```
 
-Open `http://127.0.0.1:8000/admin/` to manage catalog records and `http://127.0.0.1:8000/api/products` to read the public catalog. Without database environment variables, local development stores data in the ignored `backend/db.sqlite3` file. For PostgreSQL, set `DB_HOST`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`, and optionally `DB_PORT`; use a local-only password and keep environment files out of git.
+Open `http://127.0.0.1:8000/admin/` to manage catalog records and `http://127.0.0.1:8000/api/products` to read the public catalog. Without PostgreSQL environment variables, local development stores data in the ignored `backend/db.sqlite3` file. For PostgreSQL, set `POSTGRES_DB_HOST`, `POSTGRES_DB_NAME`, `POSTGRES_DB_USER`, `POSTGRES_DB_PASSWORD`, and optionally `POSTGRES_DB_PORT`; use a local-only password and keep environment files out of git.
 
 Production proxy settings are not a deployment recipe. A TLS-terminating proxy must overwrite incoming `X-Forwarded-Proto` before `DJANGO_BEHIND_PROXY=1` is enabled; production deployment and proxy validation belong to issue #11.
 

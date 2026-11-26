@@ -1,8 +1,33 @@
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
 from django.db import DatabaseError, transaction
 from django.test import TestCase, skipUnlessDBFeature
 
 from shop.models import CatalogAudit, Product, ProductVariant, StockAdjustment
+
+
+class CatalogAuditInstanceGuardTests(TestCase):
+    def test_instance_save_and_delete_are_rejected_without_changing_state(self):
+        actor = get_user_model().objects.create_user(username="instance-audit-operator")
+        audit = CatalogAudit.objects.create(
+            object_type=CatalogAudit.ObjectType.PRODUCT,
+            object_id=1,
+            action=CatalogAudit.Action.CREATED,
+            actor=actor,
+            before_state=None,
+            after_state={"name": "original"},
+        )
+        original_state = audit.after_state
+
+        audit.after_state = {"name": "rewritten"}
+        with self.assertRaises(ValidationError):
+            audit.save()
+        with self.assertRaises(ValidationError):
+            audit.delete()
+
+        audit.refresh_from_db()
+        self.assertEqual(audit.after_state, original_state)
+        self.assertTrue(CatalogAudit.objects.filter(pk=audit.pk).exists())
 
 
 @skipUnlessDBFeature("has_select_for_update")
