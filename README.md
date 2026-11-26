@@ -1,5 +1,5 @@
 # Binux Shop Demo
 
-Run from this folder: `python3 -m http.server 8876 --bind 127.0.0.1 --directory public` and open `http://127.0.0.1:8876/`. For hosting, serve only `public/`. No build, dependencies, backend or external runtime requests. Cart and favorites are stored in the browser. Order confirmation is local and simulated, with no personal details or payment.
+Persian RTL catalog demo for Sweet Girl hair-care products. Run locally: `python3 -m http.server 8876 --bind 127.0.0.1 --directory public` and open `http://127.0.0.1:8876/`. For hosting, serve only `public/`. No build, backend, payment or external runtime requests; favorites and the sample selection list stay in the browser.
 
-Official Binux artwork copied from the existing website checkout. Apparel photographs are illustration only, from Unsplash (source IDs in ASSETS.md). Vazirmatn is distributed under the SIL Open Font License. Digikala was the structure reference, not a source of code, brand assets or catalog data.
+Product photos and listed marketing claims were extracted/transcribed from the supplied brochure. Claims are not independently verified; prices were not present in the brochure and are shown as “استعلام قیمت”. The original PDF is not included in the repository. Sweet Girl product photos are documented in `ASSETS.md`. Official Binux artwork is retained as the demo host identity. Vazirmatn is distributed under the SIL Open Font License.
