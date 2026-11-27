@@ -1,6 +1,7 @@
 # Binux Shop Demo
 
 Persian RTL storefront source. The existing `public/` page is still a demo and is not connected to checkout or payments. This PR adds a backend foundation only; public-page integration is deferred until PR #5 is merged, as required by issue #7.
+Persian RTL catalog demo for Sweet Girl hair-care products. Run locally: `python3 -m http.server 8876 --bind 127.0.0.1 --directory public` and open `http://127.0.0.1:8876/`. For hosting, serve only `public/`. No build, backend, payment or external runtime requests; cart and favorites persist in this browser only. The cart supports quantity changes and item removal but doesn't submit orders.
 
 Demo-product approval and provenance are documented in [`PRODUCT.md`](PRODUCT.md). Do not copy demo listings into the backend catalog.
 
