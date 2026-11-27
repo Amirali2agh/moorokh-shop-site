@@ -13,7 +13,14 @@ Demo-product approval and provenance are documented in [`PRODUCT.md`](PRODUCT.md
 - Catalog changes are available only through the authenticated Django admin (`/admin/`). Product and variant create/update events store before/after snapshots with the operator. Products and variants are deactivated rather than deleted.
 - Stock quantity is read-only in product/variant forms. Adjustments use a separate permission-gated admin form; each append-only record stores operator, delta, reason, and resulting quantity. PostgreSQL triggers prevent hard deletes and rewrites of catalog audit and stock-adjustment history.
 - Database constraints reject negative stock, non-positive prices, and a price/currency mismatch. The public API does not accept catalog writes.
-- The catalog endpoint is read-only (`POST /api/products` returns 405). There is no cart persistence, checkout, payment, customer messaging, or production deployment in this change.
+- The catalog endpoint is read-only (`POST /api/products` returns 405). The separate cart API stores only variant IDs and quantities against an opaque server session; it collects no name, phone, address, or payment fields and does not reserve stock. There is still no checkout, order creation, payment, customer messaging, or production deployment.
+
+### Session cart API
+
+- `GET /api/cart` returns the current session's items as `variant_id` and `quantity` only.
+- `PUT /api/cart/items/<variant_id>` with `{"quantity": 2}` sets that variant's quantity. Only active variants of approved products with stock available may be added; quantities must be positive integers. A cart does not reserve inventory; checkout must revalidate stock.
+- `DELETE /api/cart/items/<variant_id>` removes that item. Mutating requests require Django CSRF protection and use the HTTP-only session cookie; the session identifier is never returned in JSON.
+- These endpoints are backend-only. The public storefront remains disconnected until PR #5 is merged, and checkout stays out of scope until issue #6 decisions are recorded.
 
 ## Current storefront preview
 
